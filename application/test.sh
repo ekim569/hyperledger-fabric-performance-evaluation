@@ -1,57 +1,4 @@
-#!/bin/bash
-#
-# Copyright IBM Corp All Rights Reserved
-#
-# SPDX-License-Identifier: Apache-2.0
-#
-# Exit on first error
-set -e pipefail
-
-
-# don't rewrite paths for Windows Git Bash users
-export MSYS_NO_PATHCONV=1
-starttime=$(date +%s)
-CC_SRC_LANGUAGE=${1:-"go"}
-CC_SRC_LANGUAGE=`echo "$CC_SRC_LANGUAGE" | tr [:upper:] [:lower:]`
-CC_RUNTIME_LANGUAGE=golang
-CC_SRC_PATH=github.com/chaincode/marbles02_private/go
-
-
-# clean the keystore
-rm -rf ./hfc-key-store
-
-# launch network; create channel and join peer to channel
-pushd ../first-network
-echo y | ./byfn.sh down
-echo y | ./byfn.sh up -a -n -s couchdb
-popd
-
-docker exec -it cli bash
-
-#############################################
-# Chaincode Install
-#############################################
-peer chaincode install -n marblesp -v 1.0 -p github.com/chaincode/marbles02_private/go/
-
-export CORE_PEER_ADDRESS=peer1.org1.example.com:8051
-peer chaincode install -n marblesp -v 1.0 -p github.com/chaincode/marbles02_private/go/
-
-export CORE_PEER_LOCALMSPID=Org2MSP
-export PEER0_ORG2_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt
-export CORE_PEER_TLS_ROOTCERT_FILE=$PEER0_ORG2_CA
-export CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp
-
-export CORE_PEER_ADDRESS=peer0.org2.example.com:9051
-peer chaincode install -n marblesp -v 1.0 -p github.com/chaincode/marbles02_private/go/
-
-export CORE_PEER_ADDRESS=peer1.org2.example.com:10051
-peer chaincode install -n marblesp -v 1.0 -p github.com/chaincode/marbles02_private/go/
-
-#############################################
-# Chaincode Instantiate
-#############################################
-export ORDERER_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
-peer chaincode instantiate -o orderer.example.com:7050 --tls --cafile $ORDERER_CA -C mychannel -n marblesp -v 1.0 -c '{"Args":["init"]}' -P "OR('Org1MSP.member','Org2MSP.member')" --collections-config  $GOPATH/src/github.com/chaincode/marbles02_private/collections_config.json
+# docker exec -it cli bash
 
 export CORE_PEER_ADDRESS=peer0.org1.example.com:7051
 export CORE_PEER_LOCALMSPID=Org1MSP
@@ -119,11 +66,3 @@ peer chaincode invoke -o orderer.example.com:7050 --tls --cafile /opt/gopath/src
 # Chaincode Query after 4 block creation 
 #############################################
 peer chaincode query -C mychannel -n marblesp -c '{"Args":["readMarblePrivateDetails","marble1"]}'
-
-cat <<EOF
-
-Total setup execution time : $(($(date +%s) - starttime)) secs ...
-
-EOF
-
-exit

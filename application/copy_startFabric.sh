@@ -96,10 +96,9 @@ docker exec \
     -n marblesp \
     -l "$CC_RUNTIME_LANGUAGE" \
     -v 1.0 \
-    -c '{"Args":["init"]}' \
-    -P "OR('Org1MSP.member','Org2MSP.member')" \
+    -c '{"Args":[]}' \
+    -P "AND('Org1MSP.member','Org2MSP.member')" \
     --tls \
-    --collections-config /opt/gopath/src/github.com/chaincode/marbles02_private/collections_config.json\
     --cafile ${ORDERER_TLS_ROOTCERT_FILE} \
     --peerAddresses peer0.org1.example.com:7051 \
     --tlsRootCertFiles ${ORG1_TLS_ROOTCERT_FILE}

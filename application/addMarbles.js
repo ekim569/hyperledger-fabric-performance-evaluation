@@ -97,15 +97,21 @@ async function main() {
             // Submit the 'initMarble' transaction to the smart contract, and wait for it
             // to be committed to the ledger.
 
+            // Private data sent as transient data: { [key: string]: Buffer }
             const transientData = {
-                marble: Buffer.from(docType + counter),
-                color: Buffer.from(colors[randomColor]),
-                owner: Buffer.from(owners[randomOwner]),
-                size: Buffer.from(sizes[randomSize])
+                name: docType + counter,
+                color: colors[randomColor],
+                owner: owners[randomOwner],
+                size: sizes[randomSize],
+                price: 99
             };
 
-            const result = await contract.createTransaction('initMarble').setTransient(transientData).submit();
-            console.log(result);
+            const marble = Buffer.from(JSON.stringify(transientData)).toString('base64');
+
+            await contract.createTransaction('initMarble')
+                .setTransient({ marble: marble })
+                .submit();
+
             // await contract.submitTransaction('initMarble', docType+counter, colors[randomColor], ''+sizes[randomSize], owners[randomOwner]);
             console.log("Adding marble: " + docType + counter + "   owner:"  + owners[randomOwner] + "   color:" + colors[randomColor] + "   size:" + '' + sizes[randomSize] );
 
